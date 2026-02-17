@@ -4,11 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
-    "start": "npm run start --prefix backend"
+    "dev:server": "nodemon backend/src/server.js",
+    "dev:inngest": "npx inngest-cli@latest dev -u http://localhost:5000/api/inngest",
+    "dev:ngrok": "ngrok http 5000",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:inngest\" \"npm run dev:ngrok\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }

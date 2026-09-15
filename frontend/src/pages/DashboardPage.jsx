@@ -2,6 +2,7 @@ import { useNavigate } from "react-router";
 import { useUser } from "@clerk/clerk-react";
 import { useState } from "react";
 import { useActiveSessions, useCreateSession, useMyRecentSessions } from "../hooks/useSessions";
+import { useProblems } from "../hooks/useProblems";
 
 import Navbar from "../components/Navbar";
 import WelcomeSection from "../components/WelcomeSection";
@@ -20,6 +21,9 @@ function DashboardPage() {
 
   const { data: activeSessionsData, isLoading: loadingActiveSessions } = useActiveSessions();
   const { data: recentSessionsData, isLoading: loadingRecentSessions } = useMyRecentSessions();
+  const { data: problemsData } = useProblems();
+
+  const problems = problemsData?.problems || [];
 
   const handleCreateRoom = () => {
     if (!roomConfig.problem || !roomConfig.difficulty) return;
@@ -78,6 +82,7 @@ function DashboardPage() {
         setRoomConfig={setRoomConfig}
         onCreateRoom={handleCreateRoom}
         isCreating={createSessionMutation.isPending}
+        problems={problems}
       />
     </>
   );

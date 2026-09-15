@@ -1,46 +1,59 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { PROBLEMS } from "../data/problems";
+import { useProblem, useProblems } from "../hooks/useProblems";
+import { useCodeExecution } from "../hooks/useCodeExecution";
 import Navbar from "../components/Navbar";
 
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import ProblemDescription from "../components/ProblemDescription";
-import OutputPanel from "../components/OutputPanel";
+import OutputConsole from "../components/OutputConsole";
 import CodeEditorPanel from "../components/CodeEditorPanel";
-import { executeCode } from "../lib/piston";
 
 import toast from "react-hot-toast";
 import confetti from "canvas-confetti";
+import { Loader2Icon } from "lucide-react";
 
 function ProblemPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [currentProblemId, setCurrentProblemId] = useState("two-sum");
   const [selectedLanguage, setSelectedLanguage] = useState("javascript");
-  const [code, setCode] = useState(PROBLEMS[currentProblemId].starterCode.javascript);
-  const [output, setOutput] = useState(null);
-  const [isRunning, setIsRunning] = useState(false);
+  const [code, setCode] = useState("");
 
-  const currentProblem = PROBLEMS[currentProblemId];
+  // Fetch the current problem by slug (the URL param)
+  const { data: problemData, isLoading: loadingProblem } = useProblem(id);
+  // Fetch all problems for the problem selector dropdown
+  const { data: allProblemsData, isLoading: loadingAllProblems } = useProblems();
 
-  // update problem when URL param changes
+  const currentProblem = problemData?.problem;
+  const allProblems = allProblemsData?.problems || [];
+
+  // Code execution hook — manages execution state and per-test-case results
+  const {
+    isRunning,
+    isSubmitting,
+    executionResult,
+    runCode,
+    submitCode,
+    resetResults,
+  } = useCodeExecution(currentProblem, selectedLanguage);
+
+  // Set initial code when problem data loads or URL param changes
   useEffect(() => {
-    if (id && PROBLEMS[id]) {
-      setCurrentProblemId(id);
-      setCode(PROBLEMS[id].starterCode[selectedLanguage]);
-      setOutput(null);
+    if (currentProblem?.starterCode?.[selectedLanguage]) {
+      setCode(currentProblem.starterCode[selectedLanguage]);
+      resetResults();
     }
-  }, [id, selectedLanguage]);
+  }, [currentProblem, id, resetResults]);
 
   const handleLanguageChange = (e) => {
     const newLang = e.target.value;
     setSelectedLanguage(newLang);
-    setCode(currentProblem.starterCode[newLang]);
-    setOutput(null);
+    setCode(currentProblem?.starterCode?.[newLang] || "");
+    resetResults();
   };
 
-  const handleProblemChange = (newProblemId) => navigate(`/problem/${newProblemId}`);
+  const handleProblemChange = (newProblemSlug) => navigate(`/problem/${newProblemSlug}`);
 
   const triggerConfetti = () => {
     confetti({
@@ -56,58 +69,51 @@ function ProblemPage() {
     });
   };
 
-  const normalizeOutput = (output) => {
-    // normalize output for comparison (trim whitespace, handle different spacing)
-    return output
-      .trim()
-      .split("\n")
-      .map((line) =>
-        line
-          .trim()
-          // remove spaces after [ and before ]
-          .replace(/\[\s+/g, "[")
-          .replace(/\s+\]/g, "]")
-          // normalize spaces around commas to single space after comma
-          .replace(/\s*,\s*/g, ",")
-      )
-      .filter((line) => line.length > 0)
-      .join("\n");
-  };
-
-  const checkIfTestsPassed = (actualOutput, expectedOutput) => {
-    const normalizedActual = normalizeOutput(actualOutput);
-    const normalizedExpected = normalizeOutput(expectedOutput);
-
-    return normalizedActual == normalizedExpected;
-  };
-
   const handleRunCode = async () => {
-    setIsRunning(true);
-    setOutput(null);
-
-    const result = await executeCode(selectedLanguage, code);
-
-    console.log("ACTUAL OUTPUT:", result.output);
-  console.log("EXPECTED OUTPUT:", currentProblem.expectedOutput[selectedLanguage]);
-    setOutput(result);
-    setIsRunning(false);
-
-    // check if code executed successfully and matches expected output
-
-    if (result.success) {
-      const expectedOutput = currentProblem.expectedOutput[selectedLanguage];
-      const testsPassed = checkIfTestsPassed(result.output, expectedOutput);
-
-      if (testsPassed) {
-        triggerConfetti();
-        toast.success("All tests passed! Great job!");
-      } else {
-        toast.error("Tests failed. Check your output!");
-      }
-    } else {
-      toast.error("Code execution failed!");
+    try {
+      await runCode(code);
+    } catch (err) {
+      // Only show toast for network/server errors
+      toast.error("Failed to execute code. Please try again.");
     }
   };
+
+  const handleSubmitCode = async () => {
+    try {
+      const result = await submitCode(code);
+
+      // Fire confetti on Accepted Submit — keep existing behavior
+      if (result && result.verdict === "Accepted") {
+        triggerConfetti();
+        toast.success("All tests passed! Great job!");
+      }
+    } catch (err) {
+      // Only show toast for network/server errors
+      toast.error("Failed to submit code. Please try again.");
+    }
+  };
+
+  if (loadingProblem || loadingAllProblems) {
+    return (
+      <div className="h-screen bg-base-100 flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2Icon className="size-10 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentProblem) {
+    return (
+      <div className="h-screen bg-base-100 flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-lg text-base-content/70">Problem not found.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen bg-base-100 flex flex-col">
@@ -119,9 +125,9 @@ function ProblemPage() {
           <Panel defaultSize={40} minSize={30}>
             <ProblemDescription
               problem={currentProblem}
-              currentProblemId={currentProblemId}
+              currentProblemId={currentProblem.slug}
               onProblemChange={handleProblemChange}
-              allProblems={Object.values(PROBLEMS)}
+              allProblems={allProblems}
             />
           </Panel>
 
@@ -131,23 +137,31 @@ function ProblemPage() {
           <Panel defaultSize={60} minSize={30}>
             <PanelGroup direction="vertical">
               {/* Top panel - Code editor */}
-              <Panel defaultSize={70} minSize={30}>
+              <Panel defaultSize={60} minSize={20}>
                 <CodeEditorPanel
                   selectedLanguage={selectedLanguage}
                   code={code}
                   isRunning={isRunning}
+                  isSubmitting={isSubmitting}
                   onLanguageChange={handleLanguageChange}
                   onCodeChange={setCode}
                   onRunCode={handleRunCode}
+                  onSubmitCode={handleSubmitCode}
                 />
               </Panel>
 
               <PanelResizeHandle className="h-2 bg-base-300 hover:bg-primary transition-colors cursor-row-resize" />
 
-              {/* Bottom panel - Output Panel*/}
-
-              <Panel defaultSize={30} minSize={30}>
-                <OutputPanel output={output} />
+              {/* Bottom panel - Output Console */}
+              <Panel defaultSize={40} minSize={15}>
+                <OutputConsole
+                  problem={currentProblem}
+                  executionResult={executionResult}
+                  isRunning={isRunning}
+                  isSubmitting={isSubmitting}
+                  onRun={handleRunCode}
+                  onSubmit={handleSubmitCode}
+                />
               </Panel>
             </PanelGroup>
           </Panel>

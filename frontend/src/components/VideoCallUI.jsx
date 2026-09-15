@@ -6,19 +6,30 @@ import {
 } from "@stream-io/video-react-sdk";
 import { Loader2Icon, MessageSquareIcon, UsersIcon, XIcon } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router";
-import { Channel, Chat, MessageInput, MessageList, Thread, Window } from "stream-chat-react";
+import {
+  Channel,
+  Chat,
+  MessageInput,
+  MessageList,
+  Thread,
+  Window,
+} from "stream-chat-react";
 
 import "@stream-io/video-react-sdk/dist/css/styles.css";
 import "stream-chat-react/dist/css/v2/index.css";
 
-function VideoCallUI({ chatClient, channel }) {
-  const navigate = useNavigate();
+function VideoCallUI({ chatClient, channel, onLeave }) {
+  {
+    /*These hooks come from Stream-Video SDK*/
+  }
   const { useCallCallingState, useParticipantCount } = useCallStateHooks();
-  const callingState = useCallCallingState();
-  const participantCount = useParticipantCount();
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const callingState = useCallCallingState(); //is user joining? joined? ended?
+  const participantCount = useParticipantCount(); //number of people in the call
+  const [isChatOpen, setIsChatOpen] = useState(false); //controls whether chat panel is visible
 
+  {
+    /*If user is still connecting, show spinner, show "Joining call"*/
+  }
   if (callingState === CallingState.JOINING) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -32,15 +43,20 @@ function VideoCallUI({ chatClient, channel }) {
 
   return (
     <div className="h-full flex gap-3 relative str-video">
+      {" "}
+      {/*[ Video Section ]   [ Chat Section (conditionally shown) ]*/}
       <div className="flex-1 flex flex-col gap-3">
         {/* Participants count badge and Chat Toggle */}
         <div className="flex items-center justify-between gap-2 bg-base-100 p-3 rounded-lg shadow">
           <div className="flex items-center gap-2">
             <UsersIcon className="w-5 h-5 text-primary" />
             <span className="font-semibold">
-              {participantCount} {participantCount === 1 ? "participant" : "participants"}
+              {participantCount}{" "}
+              {participantCount === 1 ? "participant" : "participants"}{" "}
+              {/*Displays dynamic count of paricipant(s)*/}
             </span>
           </div>
+          {/*Chat-Toggle button*/}
           {chatClient && channel && (
             <button
               onClick={() => setIsChatOpen(!isChatOpen)}
@@ -53,17 +69,17 @@ function VideoCallUI({ chatClient, channel }) {
           )}
         </div>
 
+        {/*Stream's built-in Layout, automatically shows active speaker large, others smaller*/}
         <div className="flex-1 bg-base-300 rounded-lg overflow-hidden relative">
           <SpeakerLayout />
         </div>
 
+        {/*Redirect to /dashboard when user leaves*/}
         <div className="bg-base-100 p-3 rounded-lg shadow flex justify-center">
-          <CallControls onLeave={() => navigate("/dashboard")} />
+          <CallControls onLeave={onLeave} />
         </div>
       </div>
-
       {/* CHAT SECTION */}
-
       {chatClient && channel && (
         <div
           className={`flex flex-col rounded-lg shadow overflow-hidden bg-[#272a30] transition-all duration-300 ease-in-out ${

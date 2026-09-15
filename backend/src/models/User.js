@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
     },
   },
-  { timestamps: true } // createdAt, updatedAt
+  { timestamps: true } // includes fields like createdAt, updatedAt
 );
 
 const User = mongoose.model("User", userSchema);

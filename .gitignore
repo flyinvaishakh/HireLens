@@ -1,17 +1,32 @@
-# env files
+# ──────────────────────────────────
+#  Environment / Secrets
+# ──────────────────────────────────
 .env
-backend/.env
-frontend/.env
+.env.*
+!.env.example
 
-# dependencies
-node_modules
-backend/node_modules
-frontend/node_modules
+# ──────────────────────────────────
+#  Dependencies
+# ──────────────────────────────────
+node_modules/
 
-# builds
-dist
-frontend/dist
-backend/dist
+# ──────────────────────────────────
+#  Build outputs
+# ──────────────────────────────────
+dist/
+build/
 
-# misc
+# ──────────────────────────────────
+#  Docker
+# ──────────────────────────────────
+docker-compose.override.yml
+
+# ──────────────────────────────────
+#  OS / IDE
+# ──────────────────────────────────
 .DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

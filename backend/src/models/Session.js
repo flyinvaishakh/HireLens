@@ -12,13 +12,13 @@ const sessionSchema = new mongoose.Schema(
       required: true,
     },
     host: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: mongoose.Schema.Types.ObjectId, //stores ObjectID
+      ref: "User", //The ObjectID points to a document in the user collection
       required: true,
     },
     participant: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: mongoose.Schema.Types.ObjectId, //stores objectID
+      ref: "User", //The objecID points to a document in the userCollection
       default: null,
     },
     status: {

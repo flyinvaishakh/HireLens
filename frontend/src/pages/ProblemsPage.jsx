@@ -1,16 +1,28 @@
 import { Link } from "react-router";
 import Navbar from "../components/Navbar";
-
-import { PROBLEMS } from "../data/problems";
-import { ChevronRightIcon, Code2Icon } from "lucide-react";
+import { useProblems } from "../hooks/useProblems";
+import { ChevronRightIcon, Code2Icon, Loader2Icon } from "lucide-react";
 import { getDifficultyBadgeClass } from "../lib/utils";
 
 function ProblemsPage() {
-  const problems = Object.values(PROBLEMS);
+  const { data, isLoading } = useProblems();
+
+  const problems = data?.problems || [];
 
   const easyProblemsCount = problems.filter((p) => p.difficulty === "Easy").length;
   const mediumProblemsCount = problems.filter((p) => p.difficulty === "Medium").length;
   const hardProblemsCount = problems.filter((p) => p.difficulty === "Hard").length;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-base-200">
+        <Navbar />
+        <div className="flex items-center justify-center h-[60vh]">
+          <Loader2Icon className="size-10 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-base-200">
@@ -29,8 +41,8 @@ function ProblemsPage() {
         <div className="space-y-4">
           {problems.map((problem) => (
             <Link
-              key={problem.id}
-              to={`/problem/${problem.id}`}
+              key={problem.slug}
+              to={`/problem/${problem.slug}`}
               className="card bg-base-100 hover:scale-[1.01] transition-transform"
             >
               <div className="card-body">

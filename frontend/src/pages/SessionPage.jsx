@@ -78,6 +78,8 @@ function SessionPage() {
     isHost,
     isParticipant,
     id,
+    joinSessionMutation,
+    refetch,
   ]);
 
   // redirect the "participant" when session ends

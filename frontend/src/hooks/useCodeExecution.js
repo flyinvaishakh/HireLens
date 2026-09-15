@@ -36,7 +36,7 @@ function determineVerdict(pistonResult, testCaseResults) {
  * Split stdout into per-case results by matching output lines
  * to test cases in order.
  */
-function buildTestCaseResults(pistonResult, testCases, language) {
+function buildTestCaseResults(pistonResult, testCases) {
   // If there was a compile or runtime error, mark all cases as failed
   if (!pistonResult.success) {
     return testCases.map((tc, idx) => ({
@@ -120,8 +120,7 @@ export function useCodeExecution(problem, selectedLanguage) {
         // Build per-case results
         const testCaseResults = buildTestCaseResults(
           pistonResult,
-          targetCases,
-          selectedLanguage
+          targetCases
         );
 
         // Determine verdict

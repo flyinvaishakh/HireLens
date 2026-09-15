@@ -6,15 +6,17 @@ const apiKey = ENV.STREAM_API_KEY;
 const apiSecret = ENV.STREAM_API_SECRET;
 
 if (!apiKey || !apiSecret) {
-  console.error("STREAM_API_KEY or STREAM_API_SECRET is missing");
+  throw new Error("STREAM_API_KEY or STREAM_API_SECRET is missing. Check your .env file.");
 }
 
+//Creates a singleton stream chat client
 export const chatClient = StreamChat.getInstance(apiKey, apiSecret); // will be used chat features
 export const streamClient = new StreamClient(apiKey, apiSecret); // will be used for video calls
 
 export const upsertStreamUser = async (userData) => {
   try {
-    await chatClient.upsertUser(userData);
+    //If the user exists, update them. Otherwise, create them.
+    await chatClient.upsertUser(userData); //update + insert
     console.log("Stream user upserted successfully:", userData);
   } catch (error) {
     console.error("Error upserting Stream user:", error);

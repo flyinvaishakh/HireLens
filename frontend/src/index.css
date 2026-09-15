@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 @import "tailwindcss";
 
 @plugin "daisyui" {
@@ -10,4 +12,30 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+}
+
+/* Console monospace font */
+@layer utilities {
+  .font-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', ui-monospace, monospace;
+  }
+}
+
+/* Custom scrollbar for console areas */
+.console-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.console-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.console-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+.console-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }

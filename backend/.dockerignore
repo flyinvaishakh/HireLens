@@ -1,0 +1,28 @@
+# ──────────────────────────────────
+#  Backend — .dockerignore
+# ──────────────────────────────────
+
+node_modules
+npm-debug.log*
+
+# Environment files (secrets must be injected at runtime)
+.env
+.env.*
+
+# Git
+.git
+.gitignore
+
+# Build outputs
+dist
+build
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.vscode
+.idea
+*.swp
+*.swo

@@ -1,42 +1,58 @@
 import express from "express";
 import axios from "axios";
+import { protectRoute } from "../middleware/protectRoute.js";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+const PISTON_URL = process.env.PISTON_URL || "http://localhost:2000";
+
+router.post("/", protectRoute, async (req, res) => {
   try {
     const { language, code } = req.body;
 
-    const languageMap = {
-      javascript: 63, // Node.js
-      python: 71,
-      java: 62,
-    };
+    if (!language || typeof code !== "string") {
+      return res.status(400).json({ error: "Language and code are required" });
+    }
 
     const response = await axios.post(
-      "https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true",
+      `${PISTON_URL}/api/v2/execute`,
       {
-        source_code: code,
-        language_id: languageMap[language],
+        language,
+        version: "*",
+        files: [
+          {
+            content: code,
+          },
+        ],
       },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "X-RapidAPI-Key": "YOUR_RAPIDAPI_KEY",
-          "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com",
-        },
-      }
+      { timeout: 15000 }
     );
+
+    const { run, compile } = response.data;
 
     res.json({
       run: {
-        output: response.data.stdout,
-        stderr: response.data.stderr,
+        output: run?.stdout || "",
+        stderr: compile?.stderr || run?.stderr || "",
+        code: run?.code,
+        signal: run?.signal,
+        compile_output: compile?.output || "",
       },
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Execution failed" });
+    console.error("Piston execution error:", err.response?.data || err.message);
+
+    if (err.code === "ECONNABORTED") {
+      return res.status(504).json({
+        error: "Code execution timed out",
+        details: "The execution exceeded the time limit.",
+      });
+    }
+
+    res.status(500).json({
+      error: "Execution failed",
+      details: err.response?.data || err.message,
+    });
   }
 });
 

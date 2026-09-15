@@ -1,0 +1,93 @@
+# ────────────────────────────────────────────────────────────
+#  HireLens — Docker Compose Orchestration
+#
+#  Usage:
+#    cp .env.example .env        # Fill in your secrets
+#    docker compose up --build   # Build & start all services
+#
+#  Webhook dev workflow:
+#    # In a separate terminal, expose the backend for Clerk webhooks:
+#    ngrok http 5000
+#    # Then set the ngrok HTTPS URL as the webhook endpoint in Clerk Dashboard:
+#    #   https://<id>.ngrok-free.app/api/clerk-webhook
+#
+#    # For Inngest local dev server:
+#    npx inngest-cli dev -u http://localhost:5000/api/inngest
+# ────────────────────────────────────────────────────────────
+
+services:
+  # ═══════════════════════════════════════════════════════════
+  #  MongoDB (optional — for offline local development)
+  #  For production, set DB_URL to your Atlas connection string
+  #  and remove/comment out this service.
+  # ═══════════════════════════════════════════════════════════
+  mongodb:
+    image: mongo:7
+    container_name: hirelens-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - hirelens-network
+
+  # ═══════════════════════════════════════════════════════════
+  #  Backend — Express API
+  # ═══════════════════════════════════════════════════════════
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hirelens-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      - PORT=5000
+      - NODE_ENV=${NODE_ENV:-development}
+      - DB_URL=${DB_URL:-mongodb://mongodb:27017/interview_db}
+      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - INNGEST_EVENT_KEY=${INNGEST_EVENT_KEY}
+      - INNGEST_SIGNING_KEY=${INNGEST_SIGNING_KEY}
+      - STREAM_API_KEY=${STREAM_API_KEY}
+      - STREAM_API_SECRET=${STREAM_API_SECRET}
+      - CLIENT_URL=${CLIENT_URL:-http://localhost:3000}
+    depends_on:
+      - mongodb
+    networks:
+      - hirelens-network
+
+  # ═══════════════════════════════════════════════════════════
+  #  Frontend — Vite + React (served by nginx)
+  # ═══════════════════════════════════════════════════════════
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000}
+        VITE_STREAM_API_KEY: ${VITE_STREAM_API_KEY}
+    container_name: hirelens-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - hirelens-network
+
+# ═══════════════════════════════════════════════════════════
+#  Volumes & Networks
+# ═══════════════════════════════════════════════════════════
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  hirelens-network:
+    driver: bridge

@@ -4,10 +4,16 @@ import { UserButton } from "@clerk/clerk-react";
 
 function Navbar() {
   const location = useLocation();
+  //Example: {
+//   pathname: "/profile",
+//   search: "?id=10",
+//   hash: "",
+//   state: { from: "home" },
+//   key: "abc123"
+// }
 
-  console.log(location);
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => location.pathname === path; //an arrow fn that checks if the current URL matches a given path
 
   return (
     <nav className="bg-base-100/80 backdrop-blur-md border-b border-primary/20 sticky top-0 z-50 shadow-lg">
@@ -23,7 +29,7 @@ function Navbar() {
 
           <div className="flex flex-col">
             <span className="font-black text-xl bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent font-mono tracking-wider">
-              HireLens
+              HIRELENS
             </span>
             <span className="text-xs text-base-content/60 font-medium -mt-1">Code Together</span>
           </div>

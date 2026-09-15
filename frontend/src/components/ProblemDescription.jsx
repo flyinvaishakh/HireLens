@@ -20,7 +20,7 @@ function ProblemDescription({ problem, currentProblemId, onProblemChange, allPro
             onChange={(e) => onProblemChange(e.target.value)}
           >
             {allProblems.map((p) => (
-              <option key={p.id} value={p.id}>
+              <option key={p.slug} value={p.slug}>
                 {p.title} - {p.difficulty}
               </option>
             ))}
@@ -35,7 +35,7 @@ function ProblemDescription({ problem, currentProblemId, onProblemChange, allPro
 
           <div className="space-y-3 text-base leading-relaxed">
             <p className="text-base-content/90">{problem.description.text}</p>
-            {problem.description.notes.map((note, idx) => (
+            {problem.description.notes?.map((note, idx) => (
               <p key={idx} className="text-base-content/90">
                 {note}
               </p>

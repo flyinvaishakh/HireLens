@@ -44,7 +44,7 @@ function ProblemPage() {
       setCode(currentProblem.starterCode[selectedLanguage]);
       resetResults();
     }
-  }, [currentProblem, id, resetResults]);
+  }, [currentProblem, id, resetResults, selectedLanguage]);
 
   const handleLanguageChange = (e) => {
     const newLang = e.target.value;
@@ -72,7 +72,7 @@ function ProblemPage() {
   const handleRunCode = async () => {
     try {
       await runCode(code);
-    } catch (err) {
+    } catch (_err) {
       // Only show toast for network/server errors
       toast.error("Failed to execute code. Please try again.");
     }
@@ -87,7 +87,7 @@ function ProblemPage() {
         triggerConfetti();
         toast.success("All tests passed! Great job!");
       }
-    } catch (err) {
+    } catch (_err) {
       // Only show toast for network/server errors
       toast.error("Failed to submit code. Please try again.");
     }

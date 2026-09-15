@@ -72,7 +72,7 @@ function ProblemPage() {
   const handleRunCode = async () => {
     try {
       await runCode(code);
-    } catch (_err) {
+    } catch {
       // Only show toast for network/server errors
       toast.error("Failed to execute code. Please try again.");
     }
@@ -87,7 +87,7 @@ function ProblemPage() {
         triggerConfetti();
         toast.success("All tests passed! Great job!");
       }
-    } catch (_err) {
+    } catch {
       // Only show toast for network/server errors
       toast.error("Failed to submit code. Please try again.");
     }
